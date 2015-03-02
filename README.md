@@ -6,4 +6,4 @@ Spacer is free for all to use, but we request that you don't change the code.
 If you would like to improve the code, fork it and submit a pull request. 
 It requires a text file converter to load .docx and .pdf files, among other things.
 We invite you to contribute code that would realize these changes.
-If you require payment, please formally apply at treeconverter.com, or send us an email.
+If you require payment, send us an email request.
