@@ -1,10 +1,10 @@
 /*
- * version 5.4 
- * copyright 2015 Derek James Smith
+ * EzTree 
+ * version 5.5 
+ * copyright 2011 by Derek James Smith 
  * derekjsmith@mail.com
  * all rights reserved
  */
-
 package EzTree;
 import java.awt.*;
 import java.awt.event.*;
@@ -59,6 +59,7 @@ public class View extends JFrame{
     public static JMenuItem popup_menu_item5;
     public static String SELECTED_TEXT = "";
     public static boolean CLICKED_SCREEN_ONE = false;
+    public static int SCREEN_ONE_POSITION = 0;
     private static ArrayList<Box> boxes;
     public static JList jlist;
     private static JSplitPane groovepane;
@@ -80,8 +81,8 @@ public class View extends JFrame{
     private static DefaultTreeModel treemodel;
     private static DefaultMutableTreeNode rootnode = new DefaultMutableTreeNode("START");
     private static String intro_message = 
-            "Spacer version 5.4\n"
-            + "a product of treeconverter.com\n"
+            "Spacer version 5.5\n"
+            + "by Derek James Smith\n"
             + "email: support@treeconverter.com\n"
             + "copyright 2011 treeconverter.com\n"
             + "all rights reserved\n"
@@ -95,7 +96,7 @@ public class View extends JFrame{
             + "We also make no guarantees that this program will run without errors.\n"
             + "We assume no responsibility for any computer problems experienced while running this program.";
     private static String intro_message2 = 
-            "     Spacer version 5.4\ncopyright 2011 treeconverter.com\n\n     --------What it does--------\n     reads and writes .txt files (must resave .rtf or Word files as .txt files),\n     finds any part of your outline instantly!\n     but, you must organize the outline according to certain rules...\n     the first screen allows you to create, change, or save an outline,\n     select and right-click to quickly rearrange entire sections,\n     the second two screens are for quickly reading an outine,\n     if there are formatting mistakes, they are immediately reported.\n\n     --------Formatting rules--------\n     the far-left headings must have no indentations and must be unique, \n     must indent evenly within each section,\n     basically, just write an outline that has perfectly even spacing,\n     do not use tabs,\n     blank lines are removed.\n\n     --------Example:--------\n     EZ-TREE\n     What it does\n          reads and writes text files\n               only .txt files\n               will not read .rtf or Word files\n               but, just resave them as .txt files\n          helps you instantly find topics in your outline\n          warns you if formatting rules are broken\n     Formatting rules\n          ...";
+            "     Spacer version 5.5\ncopyright 2011 treeconverter.com\n\n     --------What it does--------\n     reads and writes .txt files (must resave .rtf or Word files as .txt files),\n     finds any part of your outline instantly!\n     but, you must organize the outline according to certain rules...\n     the first screen allows you to create, change, or save an outline,\n     select and right-click to quickly rearrange entire sections,\n     the second two screens are for quickly reading an outine,\n     if there are formatting mistakes, they are immediately reported.\n\n     --------Formatting rules--------\n     the far-left headings must have no indentations and must be unique, \n     must indent evenly within each section,\n     basically, just write an outline that has perfectly even spacing,\n     do not use tabs,\n     blank lines are removed.\n\n     --------Example:--------\n     EZ-TREE\n     What it does\n          reads and writes text files\n               only .txt files\n               will not read .rtf or Word files\n               but, just resave them as .txt files\n          helps you instantly find topics in your outline\n          warns you if formatting rules are broken\n     Formatting rules\n          ...";
     private static boolean case_sensitive_search = false;
     private static boolean exact_matches_only_search = false;
     private static Debugger debugger;
@@ -104,6 +105,7 @@ public class View extends JFrame{
     public static boolean HAS_ERRORS = false;
     public static int TAB_CLICKED = 0;
     public static int LAST_TAB_CLICKED = 0;
+    public static boolean SYNC_TABLE_OF_CONTENTS = true;
 
     public View() {
         super("------------------------------ Spacer ----------------------------------------");
@@ -868,6 +870,7 @@ public class View extends JFrame{
         combobox.addItem("Open File");
         combobox.addItem("Close File");
         combobox.addItem("Delete File");
+        combobox.addItem("Options");
         combobox.addItem("Exit");
         combobox.addItem("Info");
         Comboboxhandler comboboxhandler = new Comboboxhandler();
@@ -1128,6 +1131,7 @@ public class View extends JFrame{
         writingArea.addMouseListener(new MouseAdapter(){
             public void mouseClicked(MouseEvent event){
                 CLICKED_SCREEN_ONE = true;
+                SCREEN_ONE_POSITION = writingArea.getCaretPosition();
                 if (event.isMetaDown()){
                     reset_popup_background();
                     popup_menu.show(writingArea, event.getX(), event.getY());
@@ -1447,6 +1451,8 @@ public class View extends JFrame{
                 actionTextRight.setEnabled(false);
                 actionTextLeft.setEnabled(false);
                 CLICKED_SCREEN_ONE = false;
+                SCREEN_ONE_POSITION = 0;
+                SYNC_TABLE_OF_CONTENTS = false;
                 HAS_ERRORS = false;
             } else if (combobox.getSelectedIndex() == 6){ // delete
                 try{
@@ -1469,12 +1475,21 @@ public class View extends JFrame{
                 } catch (Exception exc){
                     JOptionPane.showMessageDialog(null, exc.getMessage());
                 }
-            } else if (combobox.getSelectedIndex() == 7){ // exit
+            } else if (combobox.getSelectedIndex() == 7){ // options
+                Yesnobox yesno = new Yesnobox("Adjust writing area position to match table of contents position?");
+                yesno.open();
+                if (yesno.getresult() == true){
+                    SYNC_TABLE_OF_CONTENTS = true;
+                    CLICKED_SCREEN_ONE = false;
+                } else {
+                    SYNC_TABLE_OF_CONTENTS = false;
+                }
+            } else if (combobox.getSelectedIndex() == 8){ // exit
                 if (JOptionPane.showConfirmDialog(thisview, "EXIT PROGRAM\nThis will erase your current text.") != JOptionPane.YES_OPTION){
                     return;
                 }
                 System.exit(1);
-            } else if (combobox.getSelectedIndex() == 8){ // help
+            } else if (combobox.getSelectedIndex() == 9){ // help
                 JOptionPane.showMessageDialog(null, intro_message);
             }
             combobox.setSelectedIndex(0);
@@ -1736,7 +1751,10 @@ public class View extends JFrame{
         String screentext = stringbuilder2.toString();
         jtextarea.append(screentext);
         jtextarea.setCaretPosition(0);
-        if (CLICKED_SCREEN_ONE == true){
+        if (CLICKED_SCREEN_ONE == true && SYNC_TABLE_OF_CONTENTS == false){
+            if (writingArea.getCaretPosition() >= 0){
+                writingArea.setCaretPosition(SCREEN_ONE_POSITION);
+            }
             return;
         }
         ArrayList<String> selection2 = new ArrayList<String>();
