@@ -1,9 +1,6 @@
 /*
- * EzTree 
- * version 5.5 
- * copyright 2011 by Derek James Smith 
- * derekjsmith@mail.com
- * all rights reserved
+ * EzTree by Derek Smith 2011
+ *    derekjsmith@mail.com
  */
 package EzTree;
 import java.awt.*;
@@ -81,9 +78,9 @@ public class View extends JFrame{
     private static DefaultTreeModel treemodel;
     private static DefaultMutableTreeNode rootnode = new DefaultMutableTreeNode("START");
     private static String intro_message = 
-            "Spacer version 5.5\n"
+            "Spacer version 5.6\n"
             + "by Derek James Smith\n"
-            + "email: support@treeconverter.com\n"
+            + "email: support@infiniteoutline.com\n"
             + "copyright 2011 treeconverter.com\n"
             + "all rights reserved\n"
             + "--------What it does--------\n" 
@@ -96,7 +93,7 @@ public class View extends JFrame{
             + "We also make no guarantees that this program will run without errors.\n"
             + "We assume no responsibility for any computer problems experienced while running this program.";
     private static String intro_message2 = 
-            "     Spacer version 5.5\ncopyright 2011 treeconverter.com\n\n     --------What it does--------\n     reads and writes .txt files (must resave .rtf or Word files as .txt files),\n     finds any part of your outline instantly!\n     but, you must organize the outline according to certain rules...\n     the first screen allows you to create, change, or save an outline,\n     select and right-click to quickly rearrange entire sections,\n     the second two screens are for quickly reading an outine,\n     if there are formatting mistakes, they are immediately reported.\n\n     --------Formatting rules--------\n     the far-left headings must have no indentations and must be unique, \n     must indent evenly within each section,\n     basically, just write an outline that has perfectly even spacing,\n     do not use tabs,\n     blank lines are removed.\n\n     --------Example:--------\n     EZ-TREE\n     What it does\n          reads and writes text files\n               only .txt files\n               will not read .rtf or Word files\n               but, just resave them as .txt files\n          helps you instantly find topics in your outline\n          warns you if formatting rules are broken\n     Formatting rules\n          ...";
+            "     Spacer version 5.6\ncopyright 2011 treeconverter.com\n\n     --------What it does--------\n     reads and writes .txt files (must resave .rtf or Word files as .txt files),\n     finds any part of your outline instantly!\n     but, you must organize the outline according to certain rules...\n     the first screen allows you to create, change, or save an outline,\n     select and right-click to quickly rearrange entire sections,\n     the second two screens are for quickly reading an outine,\n     if there are formatting mistakes, they are immediately reported.\n\n     --------Formatting rules--------\n     the far-left headings must have no indentations and must be unique, \n     must indent evenly within each section,\n     basically, just write an outline that has perfectly even spacing,\n     do not use tabs,\n     blank lines are removed.\n\n     --------Example:--------\n     EZ-TREE\n     What it does\n          reads and writes text files\n               only .txt files\n               will not read .rtf or Word files\n               but, just resave them as .txt files\n          helps you instantly find topics in your outline\n          warns you if formatting rules are broken\n     Formatting rules\n          ...";
     private static boolean case_sensitive_search = false;
     private static boolean exact_matches_only_search = false;
     private static Debugger debugger;
@@ -211,7 +208,25 @@ public class View extends JFrame{
 
     public String getfilename() {
         String result = "";
-        Filedialog2 filedialog = new Filedialog2(new javax.swing.JFrame(), true, true);
+        String[] strings = new File("outlines").list();
+        boolean keepgoing = true;
+        while (keepgoing){
+            boolean keepgo = false;
+            for (int count = 0; count < strings.length; ++count){
+                if (count+1 < strings.length){
+                    String s1 = strings[count].toLowerCase();
+                    String s2 = strings[count+1].toLowerCase();
+                    if (s2.charAt(0) < s1.charAt(0)){
+                        String temp = strings[count];
+                        strings[count] = strings[count+1];
+                        strings[count+1] = temp;
+                        keepgo = true;
+                    }
+                }
+            }
+            keepgoing = keepgo;
+        }
+        Filedialog2 filedialog = new Filedialog2(new javax.swing.JFrame(), strings, true, true);
         filedialog.setVisible(true);
         currentfilename = filedialog.filename;
         result = currentfilename;
@@ -865,12 +880,12 @@ public class View extends JFrame{
         combobox.setToolTipText("main menu");
         combobox.addItem(" MAIN MENU");
         combobox.addItem("New File");
-        combobox.addItem("Save File");
-        combobox.addItem("Numbering");
         combobox.addItem("Open File");
         combobox.addItem("Close File");
-        combobox.addItem("Delete File");
+        combobox.addItem("Save File");
+        combobox.addItem("Numbering");
         combobox.addItem("Options");
+        combobox.addItem("Delete File");
         combobox.addItem("Exit");
         combobox.addItem("Info");
         Comboboxhandler comboboxhandler = new Comboboxhandler();
@@ -1372,7 +1387,7 @@ public class View extends JFrame{
                     closed_file = false;
                     HAS_ERRORS = false;
                 }
-            } else if (combobox.getSelectedIndex() == 2){ // save
+            } else if (combobox.getSelectedIndex() == 4){ // save
                 if (closed_file || currentfilename.equals("")){
                     combobox.setSelectedIndex(0);
                     return;
@@ -1385,7 +1400,7 @@ public class View extends JFrame{
                 if (debugger != null && debugger.is_open()){
                     debugger.highlight_errors();
                 }
-            } else if (combobox.getSelectedIndex() == 3) { // numbering
+            } else if (combobox.getSelectedIndex() == 5) { // numbering
                 if (closed_file || currentfilename.equals("")) {
                     combobox.setSelectedIndex(0);
                     return;
@@ -1402,7 +1417,7 @@ public class View extends JFrame{
                 if (debugger != null && debugger.is_open()) {
                     debugger.highlight_errors();
                 }
-            } else if (combobox.getSelectedIndex() == 4){ // open
+            } else if (combobox.getSelectedIndex() == 2){ // open
                 if (JOptionPane.showConfirmDialog(thisview, "OPEN NEW FILE\nThis will erase your current text.") != JOptionPane.YES_OPTION){
                     return;
                 }
@@ -1430,7 +1445,7 @@ public class View extends JFrame{
                 if (debugger != null && debugger.is_open()){
                     debugger.highlight_errors();
                 }
-            } else if (combobox.getSelectedIndex() == 5){ // close
+            } else if (combobox.getSelectedIndex() == 3){ // close
                 if (JOptionPane.showConfirmDialog(thisview, "CLOSE FILE\nThis will erase your current text.") != JOptionPane.YES_OPTION){
                     return;
                 }
@@ -1454,9 +1469,27 @@ public class View extends JFrame{
                 SCREEN_ONE_POSITION = 0;
                 SYNC_TABLE_OF_CONTENTS = false;
                 HAS_ERRORS = false;
-            } else if (combobox.getSelectedIndex() == 6){ // delete
+            } else if (combobox.getSelectedIndex() == 7){ // delete
                 try{
-                   Filedialog2 deletefile = new Filedialog2(new javax.swing.JFrame(), true, false);
+                    String[] strings = new File("outlines").list();
+                    boolean keepgoing = true;
+                    while (keepgoing){
+                        boolean keepgo = false;
+                        for (int count = 0; count < strings.length; ++count){
+                            if (count+1 < strings.length){
+                                String s1 = strings[count].toLowerCase();
+                                String s2 = strings[count+1].toLowerCase();
+                                if (s2.charAt(0) < s1.charAt(0)){
+                                    String temp = strings[count];
+                                    strings[count] = strings[count+1];
+                                    strings[count+1] = temp;
+                                    keepgo = true;
+                                }
+                            }
+                        }
+                        keepgoing = keepgo;
+                    }
+                   Filedialog2 deletefile = new Filedialog2(new javax.swing.JFrame(), strings, true, false);
                    deletefile.setVisible(true);
                    String result = deletefile.filename;
                    if (result.equals("")){
@@ -1475,7 +1508,7 @@ public class View extends JFrame{
                 } catch (Exception exc){
                     JOptionPane.showMessageDialog(null, exc.getMessage());
                 }
-            } else if (combobox.getSelectedIndex() == 7){ // options
+            } else if (combobox.getSelectedIndex() == 6){ // options
                 Yesnobox yesno = new Yesnobox("Adjust writing area position to match table of contents position?");
                 yesno.open();
                 if (yesno.getresult() == true){
