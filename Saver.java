@@ -1,4 +1,7 @@
-
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+*/
 package EzTree;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -12,7 +15,7 @@ import javax.swing.border.MatteBorder;
 import java.util.ArrayList;
 /**
  *
- * @author Derek Smith
+ * @author Derek
  */
 public class Saver extends JDialog{
     private JPanel sizepanel;
@@ -217,6 +220,10 @@ public class Saver extends JDialog{
             thisview.jlist.setSelectedIndex(0);
             thisview.file_label.setText(" " + thisview.returnshortfilename());
             thisview.closed_file = false;
+            File fi = new File(save_file_name);
+            if (fi.exists()){
+               thisview.setfilesize(fi.length());
+            }
         } catch (Exception exc) {
             JOptionPane.showMessageDialog(null, "error in save: " + exc.getMessage() + ", " + exc.getCause());
             thisview.combobox.setSelectedIndex(0);

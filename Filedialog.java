@@ -1,14 +1,18 @@
-
+/*
+ * EzTree by James Smith 2011
+ *    james@ejsweb.biz
+ */
 package EzTree;
 import javax.swing.*;
 import java.awt.*;
 import javax.swing.event.*;
 import java.awt.event.*;
 import java.io.*;
+import java.util.Arrays;
 import javax.swing.border.MatteBorder;
 /**
  *
- * @author Derek Smith
+ * @author James Smith
  */
 public class Filedialog extends JDialog{
     private JPanel sizepanel;

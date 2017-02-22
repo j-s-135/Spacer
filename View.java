@@ -20,6 +20,7 @@ import javax.swing.tree.DefaultTreeModel;
  *
  * @author Derek Smith
  */
+
 public class View extends JFrame{
     public static View thisview;
     public static JFrame thisframe;
@@ -65,20 +66,21 @@ public class View extends JFrame{
     public static JComboBox combobox;
     private static JToolBar top_toolbar;
     public static JTextField textbox, file_label;
-    public static JLabel search_label;
+    public static JLabel search_label, file_size_label;
     private static JButton search_button, next_button, previous_button, up_button, down_button;
     private static int Masterlistindex = 0;
     private static String search_string = "";
     private static int current_search_index = -1;
     private static ArrayList<Integer> search_results;
-    public static String currentfilename = "";
+    public static String currentfilename = ""; // includes path
     private static String shortfilename = "";
     public static String newfilename = "";
     private static JTree tree;
     private static DefaultTreeModel treemodel;
     private static DefaultMutableTreeNode rootnode = new DefaultMutableTreeNode("START");
+    public static String FILE_SIZE;
     private static String intro_message = 
-            "Spacer version 5.6\n"
+            "Spacer version 5.7\n"
             + "by Derek James Smith\n"
             + "email: support@infiniteoutline.com\n"
             + "copyright 2011 treeconverter.com\n"
@@ -93,7 +95,7 @@ public class View extends JFrame{
             + "We also make no guarantees that this program will run without errors.\n"
             + "We assume no responsibility for any computer problems experienced while running this program.";
     private static String intro_message2 = 
-            "     Spacer version 5.6\ncopyright 2011 treeconverter.com\n\n     --------What it does--------\n     reads and writes .txt files (must resave .rtf or Word files as .txt files),\n     finds any part of your outline instantly!\n     but, you must organize the outline according to certain rules...\n     the first screen allows you to create, change, or save an outline,\n     select and right-click to quickly rearrange entire sections,\n     the second two screens are for quickly reading an outine,\n     if there are formatting mistakes, they are immediately reported.\n\n     --------Formatting rules--------\n     the far-left headings must have no indentations and must be unique, \n     must indent evenly within each section,\n     basically, just write an outline that has perfectly even spacing,\n     do not use tabs,\n     blank lines are removed.\n\n     --------Example:--------\n     EZ-TREE\n     What it does\n          reads and writes text files\n               only .txt files\n               will not read .rtf or Word files\n               but, just resave them as .txt files\n          helps you instantly find topics in your outline\n          warns you if formatting rules are broken\n     Formatting rules\n          ...";
+            "     Spacer version 5.7\ncopyright 2011 treeconverter.com\n\n     --------What it does--------\n     reads and writes .txt files (must resave .rtf or Word files as .txt files),\n     finds any part of your outline instantly!\n     but, you must organize the outline according to certain rules...\n     the first screen allows you to create, change, or save an outline,\n     select and right-click to quickly rearrange entire sections,\n     the second two screens are for quickly reading an outine,\n     if there are formatting mistakes, they are immediately reported.\n\n     --------Formatting rules--------\n     the far-left headings must have no indentations and must be unique, \n     must indent evenly within each section,\n     basically, just write an outline that has perfectly even spacing,\n     do not use tabs,\n     blank lines are removed.\n\n     --------Example:--------\n     EZ-TREE\n     What it does\n          reads and writes text files\n               only .txt files\n               will not read .rtf or Word files\n               but, just resave them as .txt files\n          helps you instantly find topics in your outline\n          warns you if formatting rules are broken\n     Formatting rules\n          ...";
     private static boolean case_sensitive_search = false;
     private static boolean exact_matches_only_search = false;
     private static Debugger debugger;
@@ -145,8 +147,23 @@ public class View extends JFrame{
         tabbedpane.addTab("splash screen", null, splashScreen, "splash screen");
     }
     
+    public String applicationPath(){
+        String path = View.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        if (path.endsWith("/build/classes/")){ // Netbeans
+            path = path.replace("/build/classes/", "");
+        } else if (path.endsWith("\\build\\classes\\")){
+            path = path.replace("\\build\\classes\\", "");
+        } else if (path.endsWith(".jar")){
+            File file = new File(path);
+            path = file.getParent();
+        }
+        path = path.replace("%20", " ");
+        return path;
+        //return System.getProperty("user.dir");
+    }
+    
     public void init_folder(){
-        File folder = new File("outlines");
+        File folder = new File(applicationPath() + "/outlines");
         if (!folder.exists() && !folder.isDirectory()){
             folder.mkdir();
         }
@@ -169,6 +186,31 @@ public class View extends JFrame{
     }
 
     // LOAD AND READ FILE
+    
+    public String getfilesize(){
+        return FILE_SIZE;
+    }
+    
+    public static void setfilesize(long size){
+        if (size > 999999999){
+            int gb = (int)(size/1000000000);
+            int mb = (int)(size % 1000000000);
+            mb = (int)(mb/100000000);
+            FILE_SIZE = "" + gb + "." + mb + " GB";
+        } else if (size > 999999){
+            int mb = (int)(size/1000000);
+            int kb = (int)(size % 1000000);
+            kb = (int)(kb/100000);
+            FILE_SIZE = "" + mb + "." + kb + " MB";
+        } else if (size > 999){
+            int s = (int)(size/1000);
+            FILE_SIZE = "" + s + " KB";
+        } else {
+           FILE_SIZE = "" + size + " bytes";
+        }
+        file_size_label.setText(FILE_SIZE);
+    }
+    
     public boolean loadfileintoarrays(String... folder_file) {
         try {
             String folder = "";
@@ -177,6 +219,7 @@ public class View extends JFrame{
                folder = folder_file[0];
                filename = folder_file[1];
             } else {
+                folder = applicationPath();
                 filename = getfilename();
             }
             if (filename.equals("keeplooking")) {
@@ -185,17 +228,18 @@ public class View extends JFrame{
                     folder = "infilename";
                     filename = filepath;
                 } else {
+                    JOptionPane.showMessageDialog(null, "unknown error");
                     System.exit(1);
                 }
             } else if (filename.equals("")){
                 return false;
             } else {
                 if (folder_file.length != 2){
-                   folder = "outlines";
+                   folder = applicationPath() + "/" + "outlines";
                 }
             }
             loadfile(folder, filename);
-            currentfilename = filename;
+            currentfilename = folder.equals("infilename")? filename : folder + "/" + filename;
             shortfilename = returnshortfilename();
             maketableofcontents();
             makemasterlist();
@@ -208,7 +252,7 @@ public class View extends JFrame{
 
     public String getfilename() {
         String result = "";
-        String[] strings = new File("outlines").list();
+        String[] strings = new File(applicationPath() + "/outlines").list();
         boolean keepgoing = true;
         while (keepgoing){
             boolean keepgo = false;
@@ -234,7 +278,8 @@ public class View extends JFrame{
     }
 
     public String returnlongfilename(){
-        String result = returnpath() + "/" + returnshortfilename();
+        File file = new File(currentfilename);
+        String result = file.getAbsolutePath();
         return result;
     }
     
@@ -271,6 +316,7 @@ public class View extends JFrame{
         } else {
             File pathname = filechooser.getSelectedFile();
             if (pathname == null || pathname.getName().equals("")) {
+                JOptionPane.showMessageDialog(null,"unknown error");
                 System.exit(1);
             }
             result = pathname.getAbsolutePath();
@@ -281,7 +327,7 @@ public class View extends JFrame{
 
     public void loadfile(String foldername, String filename) {
         try {
-            if (foldername.equalsIgnoreCase("outlines")) {
+            if (foldername.equalsIgnoreCase(applicationPath() + "/" + "outlines")) {
                 File folder = new File(foldername);
                 if (folder.exists() && folder.isDirectory()) {
                     if (filename.endsWith(".txt")) {
@@ -311,7 +357,7 @@ public class View extends JFrame{
             }
         } catch (Exception exception) {
             JOptionPane.showMessageDialog(null, exception.getMessage() + exception.toString());
-            System.exit(1);
+            //System.exit(1);
         }
     }
 
@@ -618,6 +664,7 @@ public class View extends JFrame{
                 debugger.set_boxes(boxmap, thisview);
             }
         } else {
+            try{
             boolean incomplete = false;
             ArrayList<String> badones = new ArrayList<String>();
             int count = 1;
@@ -666,6 +713,9 @@ public class View extends JFrame{
                     debugger.set_boxes(boxmap, thisview);
                 }
             }
+            } catch (Exception exc){
+                JOptionPane.showMessageDialog(null, exc.getMessage());
+            }
         }
     }
     
@@ -706,8 +756,9 @@ public class View extends JFrame{
                 }
             } else if (Keys.get(nextindex).length() < Keys.get(thisindex).length()){ // more shallow
                 boolean success = false;
+                //int LEFTMOST = Keys.get(nextindex).length();
                 for (int count = thisindex; count >= 0; --count){
-                    if (Keys.get(count).length() == Keys.get(nextindex).length()){
+                    if (Keys.get(count).length() == Keys.get(nextindex).length()){// && Keys.get(count).length() <= LEFTMOST){
                         success = true;
                         DefaultMutableTreeNode parent = (DefaultMutableTreeNode)nodelist.get(count).getParent();
                         parent.add((DefaultMutableTreeNode)nodelist.get(nextindex));
@@ -724,6 +775,10 @@ public class View extends JFrame{
                             }
                         }
                         break;
+                    //} else if (Keys.get(count).length() == 0){// && LEFTMOST != Keys.get(nextindex).length()){ 
+                        //break;
+                    } else if (Keys.get(count).length() < Keys.get(nextindex).length()){
+                        break;//LEFTMOST = Keys.get(count).length();
                     }
                 }
                 if (success == false){
@@ -737,6 +792,8 @@ public class View extends JFrame{
                 } else {
                     Numbered_tree.add(String.format("%s%d. %s", Keys.get(nextindex), nodelist.get(nextindex).getParent().getIndex(nodelist.get(nextindex)) + 1, Trimmedlines.get(nextindex)));
                 }
+            } else { 
+                //
             }
         }
     }
@@ -886,8 +943,8 @@ public class View extends JFrame{
         combobox.addItem("Numbering");
         combobox.addItem("Options");
         combobox.addItem("Delete File");
-        combobox.addItem("Exit");
         combobox.addItem("Info");
+        combobox.addItem("Exit");
         Comboboxhandler comboboxhandler = new Comboboxhandler();
         combobox.addItemListener(comboboxhandler);
         combobox.setMaximumRowCount(10);
@@ -939,6 +996,10 @@ public class View extends JFrame{
         file_label.setText("closed");
         top_toolbar.add(file_label);
         file_label.setEditable(false);
+        
+        file_size_label = new JLabel("");
+        top_toolbar.add(file_size_label);
+        setfilesize(0);
     }
     
     public void init_actions(){
@@ -1374,7 +1435,7 @@ public class View extends JFrame{
                     } else {
                        newfilename = newname;
                     }
-                    currentfilename = newfilename;
+                    currentfilename = applicationPath() + "/outlines/" + newfilename;
                     MAKING_NEW_FILE = true;
                     initarrays();
                     MAKING_NEW_FILE = false;
@@ -1386,6 +1447,7 @@ public class View extends JFrame{
                     file_label.setText(" " + returnshortfilename());
                     closed_file = false;
                     HAS_ERRORS = false;
+                    setfilesize(0);
                 }
             } else if (combobox.getSelectedIndex() == 4){ // save
                 if (closed_file || currentfilename.equals("")){
@@ -1442,6 +1504,10 @@ public class View extends JFrame{
                 jlist.setSelectedIndex(0);
                 file_label.setText(" " + returnshortfilename());
                 closed_file = false;
+                File fi = new File(returnlongfilename());
+                if (fi.exists()){
+                   setfilesize(fi.length());
+                }                
                 if (debugger != null && debugger.is_open()){
                     debugger.highlight_errors();
                 }
@@ -1469,9 +1535,10 @@ public class View extends JFrame{
                 SCREEN_ONE_POSITION = 0;
                 SYNC_TABLE_OF_CONTENTS = false;
                 HAS_ERRORS = false;
+                setfilesize(0);
             } else if (combobox.getSelectedIndex() == 7){ // delete
                 try{
-                    String[] strings = new File("outlines").list();
+                    String[] strings = new File(applicationPath() + "/outlines").list();
                     boolean keepgoing = true;
                     while (keepgoing){
                         boolean keepgo = false;
@@ -1496,7 +1563,7 @@ public class View extends JFrame{
                        combobox.setSelectedIndex(4);
                        return;
                    }
-                   File file = new File("outlines/" + result);
+                   File file = new File(applicationPath() + "/outlines/" + result);
                    if (JOptionPane.showConfirmDialog(thisview, "Erase " + file.getName() + "?") != JOptionPane.YES_OPTION){
                        return;
                    }
@@ -1517,12 +1584,12 @@ public class View extends JFrame{
                 } else {
                     SYNC_TABLE_OF_CONTENTS = false;
                 }
-            } else if (combobox.getSelectedIndex() == 8){ // exit
+            } else if (combobox.getSelectedIndex() == 9){ // exit
                 if (JOptionPane.showConfirmDialog(thisview, "EXIT PROGRAM\nThis will erase your current text.") != JOptionPane.YES_OPTION){
                     return;
                 }
                 System.exit(1);
-            } else if (combobox.getSelectedIndex() == 9){ // help
+            } else if (combobox.getSelectedIndex() == 8){ // help
                 JOptionPane.showMessageDialog(null, intro_message);
             }
             combobox.setSelectedIndex(0);
